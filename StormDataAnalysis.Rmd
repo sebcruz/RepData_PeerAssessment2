@@ -5,18 +5,43 @@ date: "April 22, 2015"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+##Summary
+This is my summary text.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+##Data Processing
+*Load Required Libraries*
+```{r, echo=TRUE, message=FALSE}
+library(ggplot2)
+library(car) #recode() 
 
-```{r}
-summary(cars)
 ```
 
-You can also embed plots, for example:
+*Download and Import*
+```{r, echo=TRUE, message=FALSE}
+# Set Working directory
+# Edit as necessary
+setwd("~/GitHub/RepData_PeerAssessment2")
 
-```{r, echo=FALSE}
-plot(cars)
+# Import Data
+data.raw <- read.csv(bzfile("repdata-data-StormData.csv.bz2")) #Can read .bz2 files directly with bzfile()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+*Standardize Values and Units*
+Property Damage (PROPDMG) and Crop Damage (CROPDMG) are the estimated financial damage caused.  The value magnitudes are determined by the characters in the fields PROPDMGEXP and CROPDMGEXP according to the [data documentation] (https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) provided, see Section 2.7 Damage.
+Value	|	Mapping
+-----	-	-------
+-	|	0
+?	|	0
++	|	0
+B	|	Billions
+h	|	Hundreds
+H	|	Hundreds
+K	|	Thousands
+M	|	Millions
+m	|	Millions
+0-9 	|	Exponent
+```{r, echo=TRUE, message=FALSE}
+
+
+```
+
