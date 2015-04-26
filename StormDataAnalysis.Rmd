@@ -5,28 +5,28 @@ date: "April 22, 2015"
 output: html_document
 ---
 
-##Synopsis
+###Synopsis
 This is my summary text.
 
-##Data Processing
+###Data Processing
 *Load Required Libraries*
 ```{r, echo=TRUE, message=FALSE}
 library(ggplot2)
-library(car) #recode() 
+library(car) #recode()
+library(dplyr)
 ```
 
 *Download and Import*
-```{r, echo=TRUE, message=FALSE}
+```{r, echo=TRUE, message=FALSE, cache=TRUE}
 # Set Working directory
 # Edit as necessary
 setwd("~/GitHub/RepData_PeerAssessment2")
 
 # Import Data
 data.raw = read.csv(bzfile("repdata-data-StormData.csv.bz2")) #Can read .bz2 files directly with bzfile()
-head(data.raw)
 ```
 
-*Subset Data*
+*Isolate Required Columns*
 ```{r, echo=TRUE, message=FALSE}
 # Isolate Required Columns
 data.analysis = data.raw[ ,c('EVTYPE', 'FATALITIES', 'INJURIES', 'PROPDMG', 'CROPDMG', 'PROPDMGEXP', 'CROPDMGEXP')]
@@ -34,20 +34,21 @@ head(data.analysis)
 ```
 
 *Standardize Values and Magnitude*
-Property Damage (PROPDMG) and Crop Damage (CROPDMG) are the estimated financial damage caused.  The value magnitudes are determined by the characters in the fields PROPDMGEXP and CROPDMGEXP according to the [data documentation] (https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) provided, see Section 2.7 Damage. I am assuming a mapping value of 1 for the non-alphanumeric values and assuming that numerical values are the number of significant digits used in scientific notation.
-Value	|	Mapping
------	-	-------
-  | 1
--	|	1
-?	|	1
-+	|	1
-B	|	Billions
-h	|	Hundreds
-H	|	Hundreds
-K	|	Thousands
-M	|	Millions
-m	|	Millions
-0-9 |	Sig Digits
+Property Damage (PROPDMG) and Crop Damage (CROPDMG) are the estimated financial damage caused.  The value magnitudes are determined by the characters in the fields PROPDMGEXP and CROPDMGEXP according to the [data documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) provided, see Section 2.7 Damage. I am assuming a mapping value of 1 for the non-alphanumeric values and assuming that numerical values are the number of significant digits used in scientific notation.
+
+Value | Mapping
+----- | -------
+'' | 1
+- | 1
+? | 1
++ | 1
+B | Billions
+h | Hundreds
+H | Hundreds
+K | Thousands
+M | Millions
+m | Millions
+0-9 | Significant Digits
 
 ```{r, echo=TRUE, message=FALSE}
 #Recode PROPDMGEXP values
@@ -110,21 +111,48 @@ data.analysis$TOTALDEATHINJ = data.analysis$FATALITIES + data.analysis$INJURIES
 head(data.analysis)
 ```
 
-*Summarize data.analysis as Health and Damage*
+*Summarize Health and Damage*
+The summerized datasets will be used in the analysis below
 ```{r, echo=TRUE, message=FALSE}
 #Create .health dataset, Remove EXP columns for clean summerization
 data.analysis.health = data.analysis[ ,c('EVTYPE','FATALITIES','INJURIES','TOTALDEATHINJ')]
 
 #Create .damage dataset, Remove EXP columns for clean summerization
-data.analysis.damage = data.analysis[ ,c('EVTYPE','','','')
+data.analysis.damage = data.analysis[ ,c('EVTYPE','PROPDMG','CROPDMG','TOTALDMG')]
 
-colnames(data.analysis)
+#Summerize Health using dplyr
+data.analysis.health.sum = 
+  data.analysis.health %>%
+  group_by(EVTYPE) %>%
+  summarise_each(funs(sum)) %>%
+  arrange(desc(TOTALDEATHINJ))
 
+head(data.analysis.health.sum)
+
+#Summerize Damage using dplyr
+data.analysis.damage.sum = 
+  data.analysis.damage %>%
+  group_by(EVTYPE) %>%
+  summarise_each(funs(sum)) %>%
+  arrange(desc(TOTALDMG))
+
+head(data.analysis.damage.sum)
 ```
 
 
+###Results 
+####1. Across the United States, which types of events (as indicated in the 'EVTYPE' variable) are most harmful with respect to population health?
+To answer this I utilized the 'data.analysis.health.sum' summary table that sums the deaths and injuries by 'EVTYPE' ordered descending. Additionally I isolated the top 10 causes of Total Death & Injuries and calculated the proportion they make as a percentage of the whole.  
 
-##Results 
-1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+```{r, echo=TRUE, message=FALSE}
+AllUp.DeathInj = sum(data.analysis.health.sum$TOTALDEATHINJ)
+Top10.DeathInj = sum(data.analysis.health.sum[1:10,4])
+PrctTop10.DeathInj = Top10.DeathInj/AllUp.DeathInj
+TopEVTYPE.DeathInj = sum(data.analysis.health.sum[1,4])
+PrctTopEVTYPE.DeathInj = TopEVTYPE.DeathInj/AllUp.DeathInj
+```
 
-2. Across the United States, which types of events have the greatest economic consequences?
+Tornados cause the vast majority of death and injuries in the United States between 1950 and 2011. They were responsible for `r TopEVTYPE.DeathInj` or `r round(PrctTopEVTYPE.DeathInj * 100, digits=1)`% of all Deaths and Injuries.
+
+
+####2. Across the United States, which types of events have the greatest economic consequences?
