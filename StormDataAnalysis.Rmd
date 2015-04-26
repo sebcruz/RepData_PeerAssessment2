@@ -23,7 +23,7 @@ library(dplyr)
 ```
 
 *Import Data*
-```{r, echo=TRUE, message=FALSE, cache=TRUE}
+```{r, echo=TRUE, message=FALSE}
 # Set Working directory
 # Edit as necessary
 setwd("~/GitHub/RepData_PeerAssessment2")
@@ -33,7 +33,7 @@ data.raw = read.csv(bzfile("repdata-data-StormData.csv.bz2")) #Can read .bz2 fil
 ```
 
 *Isolate Required Columns*
-```{r, echo=TRUE, message=FALSE, cache=TRUE}
+```{r, echo=TRUE, message=FALSE}
 # Isolate Required Columns
 data.analysis = data.raw[ ,c('EVTYPE', 'FATALITIES', 'INJURIES', 'PROPDMG', 'CROPDMG', 'PROPDMGEXP', 'CROPDMGEXP')]
 head(data.analysis)
@@ -56,7 +56,7 @@ M | Millions
 m | Millions
 0-9 | Significant Digits
 
-```{r, echo=TRUE, message=FALSE, cache=TRUE}
+```{r, echo=TRUE, message=FALSE}
 #Recode PROPDMGEXP values
 data.analysis$PROPDMGEXP = as.numeric(
   recode(data.analysis$PROPDMGEXP, "
