@@ -76,7 +76,7 @@ ggplot(data.analysis.health.sum[1:10, ]) +
   ggtitle("Top 10 Weather Events by Total Deaths & Injuries") +
   ylab("Weather Events") +
   xlab("Total Deaths & Injuries")
-)
+
 
 reorder(EVTYPE, TOTALDEATHINJ, sum)
 
@@ -84,17 +84,6 @@ ggplot(df) +
   geom_point(aes(reorder(Names, Proportion, mean), y=Proportion)) +
   coord_flip()
 
+data.analysis.damage.sum
 
-
-
-ggplot(top.harm, aes(y=Prop.Death.and.Inj)) +
-  geom_bar(aes(x=harm.order),
-           stat="identity", fill="white", colour="darkgreen", width=0.5) + 
-  coord_flip() +
-  ggtitle("Top 15 events accounting\n for > 90% of Total Harm") +
-  ylab("Proportion of Total Deaths and Injuries") +
-  xlab("") +
-  theme(axis.text=element_text(size=rel(3)),
-        axis.title=element_text(size=rel(2.25)),
-        plot.title = element_text(size = rel(2.75)))
 

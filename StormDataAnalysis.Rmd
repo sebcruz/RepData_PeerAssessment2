@@ -2,11 +2,17 @@
 title: "StormDataAnalysis"
 author: "Sebastian Cruz"
 date: "April 22, 2015"
-output: html_document
+output: pdf_document
 ---
 
 ###Synopsis
-This is my summary text.
+For the United States between 1950 and 2011 and using data from the [NOAA Storm Database](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) I isolated the weather events responsible for the most Deaths and Injuries and also the events responsible for the greatest economic harm.
+
+In terms of Death and Injuries, Tornados were far and away the biggest cause of totalled death and injuries. They were responsible for 96,979 deaths and injuries or 62% of the total.
+
+In terms of Economic Damage, Flooding is the top weather event.  Flooding was responsible for over $150B in damages or 31% of the total for the dataset.
+
+Despite the dangers of Tornados and Floods pose to residence of the Unitied States, there is not a single law making these events illegal. Based on this analysis I would strongly encourage the legislature to outlaw Torandos and Floods to save lives and economic resources.
 
 ###Data Processing
 *Load Required Libraries*
@@ -16,7 +22,7 @@ library(car) #recode()
 library(dplyr)
 ```
 
-*Download and Import*
+*Import Data*
 ```{r, echo=TRUE, message=FALSE, cache=TRUE}
 # Set Working directory
 # Edit as necessary
@@ -27,7 +33,7 @@ data.raw = read.csv(bzfile("repdata-data-StormData.csv.bz2")) #Can read .bz2 fil
 ```
 
 *Isolate Required Columns*
-```{r, echo=TRUE, message=FALSE}
+```{r, echo=TRUE, message=FALSE, cache=TRUE}
 # Isolate Required Columns
 data.analysis = data.raw[ ,c('EVTYPE', 'FATALITIES', 'INJURIES', 'PROPDMG', 'CROPDMG', 'PROPDMGEXP', 'CROPDMGEXP')]
 head(data.analysis)
@@ -50,7 +56,7 @@ M | Millions
 m | Millions
 0-9 | Significant Digits
 
-```{r, echo=TRUE, message=FALSE}
+```{r, echo=TRUE, message=FALSE, cache=TRUE}
 #Recode PROPDMGEXP values
 data.analysis$PROPDMGEXP = as.numeric(
   recode(data.analysis$PROPDMGEXP, "
@@ -141,10 +147,14 @@ head(data.analysis.damage.sum)
 
 
 ###Results 
-####1. Across the United States, which types of events (as indicated in the 'EVTYPE' variable) are most harmful with respect to population health?
-To answer this I utilized the 'data.analysis.health.sum' summary table that sums the deaths and injuries by 'EVTYPE' ordered descending. Additionally I isolated the top 10 causes of Total Death & Injuries and calculated the proportion they make as a percentage of the whole.  
+####1. Across the United States, which types of events (as indicated in the `EVTYPE` variable) are most harmful with respect to population health?
+To answer this I utilized the `data.analysis.health.sum` summary table that sums the deaths and injuries by `EVTYPE` ordered descending. Additionally I isolated the top 10 causes of Total Death & Injuries and calculated the proportion they make as a percentage of the whole.  
 
 ```{r, echo=TRUE, message=FALSE}
+#Top 10 Events
+data.analysis.health.sum[1:10, ]
+
+#Calc Specific Sums and %
 AllUp.DeathInj = sum(data.analysis.health.sum$TOTALDEATHINJ)
 Top10.DeathInj = sum(data.analysis.health.sum[1:10,4])
 PrctTop10.DeathInj = Top10.DeathInj/AllUp.DeathInj
@@ -154,5 +164,39 @@ PrctTopEVTYPE.DeathInj = TopEVTYPE.DeathInj/AllUp.DeathInj
 
 Tornados cause the vast majority of death and injuries in the United States between 1950 and 2011. They were responsible for `r TopEVTYPE.DeathInj` or `r round(PrctTopEVTYPE.DeathInj * 100, digits=1)`% of all Deaths and Injuries.
 
+```{r, message=FALSE}
+ggplot(data.analysis.health.sum[1:10, ]) +
+  geom_bar(aes(reorder(EVTYPE, TOTALDEATHINJ, sum), y=TOTALDEATHINJ), width=0.5, stat="identity") +
+  coord_flip() +
+  ggtitle("Top 10 Weather Events by Total Deaths & Injuries") +
+  ylab("Total Deaths & Injuries") +
+  xlab("Weather Events")
+```
 
 ####2. Across the United States, which types of events have the greatest economic consequences?
+To answer this I utilized the `data.analysis.damage.sum` summary table that sums the total damage (`PROPDMG` + `CROPDMG` as `TOTALDMG`) by `EVTYPE` ordered descending.  Additionally I isolated the top 10 causes of Total Damage and calculated the proportion they make as a percentage of the whole.
+
+```{r, message=FALSE}
+#Top 10 Events
+data.analysis.damage.sum[1:10, ]
+
+#Calc Specific Sums and %
+AllUp.Damage = sum(data.analysis.damage.sum$TOTALDMG)
+Top10.Damage = sum(data.analysis.damage.sum[1:10,4])
+PrctTop10.Damage = Top10.Damage/AllUp.Damage
+TopEVTYPE.Damage = sum(data.analysis.damage.sum[1,4])
+PrctTopEVTYPE.Damage = TopEVTYPE.Damage/AllUp.Damage
+```
+
+Flooding is responsible for the vast majority of Total Damage in the United States between 1950 and 2011.  Floods were responsible for $`r round(TopEVTYPE.Damage/1e+09, digits=1)`B in Total Damages or `r round(PrctTopEVTYPE.Damage * 100, digits=1)`% of all Damage Types.
+
+```{r, message=FALSE}
+ggplot(data.analysis.damage.sum[1:10, ]) +
+  geom_bar(aes(reorder(EVTYPE, TOTALDMG, sum), y=TOTALDMG/1e+09), width=0.5, stat="identity") +
+  coord_flip() +
+  ggtitle("Top 10 Weather Events by Total Damage") +
+  ylab("Total Damage in $ Billions") +
+  xlab("Weather Events")
+```
+
+
